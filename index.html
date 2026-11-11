@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resistors & Capacitors – Finder & Colour Code Calculator</title>
+<style>
+/* ===== BRAND COLOURS – replace these 6 hex values with alphatronic.lk's exact colours ===== */
+:root{
+  --brand:#1a6cf0;      /* 'Shop now' blue – buttons, active states */
+  --brand-dark:#0f55c7; /* hover */
+  --accent:#1a6cf0;     /* highlights, focus */
+  --bg:#f3f5f9;         /* page background */
+  --card:#ffffff;       /* cards */
+  --ink:#0b1220;        /* text */
+  --muted:#5d6a80;
+  --line:#dde3ee;
+}
+@media (prefers-color-scheme:dark){:root{--bg:#10151f;--card:#18202e;--ink:#e8edf6;--muted:#9aa7bd;--line:#2a3548;--brand:#4d8ff5;--accent:#4d8ff5}}
+*{box-sizing:border-box}
+header{background:#fff;color:#0b1220}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 16px}
+h1{margin:0;font-size:1rem}.logo{display:block;line-height:0}.logo img{height:48px;width:auto;display:block}
+.hot{text-align:right;font-size:.8rem;line-height:1.25;color:#5a6577}.hot b{display:block;font-size:1rem;color:#000;white-space:nowrap}
+.bar{background:#0071df}
+.bar .wrap{display:flex;flex-wrap:wrap;gap:4px;padding:0 16px}
+.bar button{background:transparent;color:#fff;border:0;border-bottom:3px solid transparent;padding:12px 18px;font:inherit;font-weight:700;text-transform:uppercase;cursor:pointer}
+.bar button:hover{background:rgba(255,255,255,.12)}
+.bar button[aria-selected=true]{border-bottom-color:#fff;background:rgba(255,255,255,.14)}
+.bar :focus-visible{outline-color:#fff}
+body{margin:0;display:flex;flex-direction:column;min-height:100dvh;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+main.wrap{padding:12px 16px;width:100%;flex:1;min-height:0;display:flex;flex-direction:column}
+#p-find{flex:1;min-height:0;display:flex;flex-direction:column}
+body.fit{height:100dvh;overflow:hidden}
+.search{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.seg{display:flex;gap:6px}
+main .search input{border-radius:999px;padding:11px 18px}
+.seg button{font:inherit;font-weight:600;padding:10px 16px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--brand);color:#fff;border-color:var(--brand)}
+.search input,.calc input,.calc select{font:inherit;padding:11px 12px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink)}
+.search input{flex:1;min-width:220px}
+#msg{color:var(--muted);margin:0 0 8px}#msg:empty{display:none}
+#msg b{color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:repeat(5,1fr);gap:8px;flex:1;min-height:0}
+.tile{display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:4px;min-width:0;min-height:0}
+.tile svg{width:100%;height:100%}
+@media (max-width:1000px) and (min-width:701px){.grid.cap{grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(9,1fr)}}
+.grid.cap{grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(6,1fr)}
+@media (max-width:1000px) and (min-width:701px){.grid.cap{grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(9,1fr)}}
+@media (max-width:700px){.grid.cap{grid-template-columns:repeat(4,1fr);grid-template-rows:none;grid-auto-rows:68px;overflow-y:auto;align-content:start}}
+@media (max-width:700px){.grid{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(9,1fr);gap:6px}}
+.cc{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px}
+.ctitle{font-size:1.4rem;margin:0 0 12px}
+.cc h3{margin:0 0 8px;font-size:1.05rem}
+.ctabs{display:flex;gap:28px;border-bottom:1px solid var(--ink);margin-bottom:22px}
+.ctabs button{background:none;border:0;border-bottom:3px solid transparent;padding:8px 6px;font:inherit;color:var(--ink);cursor:pointer;margin-bottom:-1px}
+.ctabs button[aria-selected=true]{color:var(--accent);border-color:var(--accent);font-weight:600}
+.ccols{display:grid;grid-template-columns:1.3fr 1fr;gap:28px;align-items:center}
+.diagram{position:relative}.diagram svg{width:100%;height:auto;display:block}
+.pick{position:absolute;inset:0}
+.bsel{position:absolute;left:var(--x);top:77%;transform:translateX(-50%)}
+.bbtn{width:42px;padding:6px 4px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit;font-size:.8rem;display:flex;gap:4px;align-items:center;justify-content:center;cursor:pointer}
+.bbtn .lbl{display:none}
+.dot{width:14px;height:14px;border-radius:50%;border:1px solid rgba(0,0,0,.3);flex:none}
+.menu{position:absolute;top:calc(100% + 4px);left:50%;transform:translateX(-50%);z-index:20;background:var(--card);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.25);min-width:190px;max-height:260px;overflow:auto;padding:4px}
+.menu.r{left:auto;right:0;transform:none}
+.menu button{display:flex;width:100%;gap:8px;align-items:center;padding:7px 8px;border:0;background:none;color:var(--ink);font:inherit;font-size:.9rem;text-align:left;cursor:pointer;border-radius:5px}
+.menu button:hover,.menu button:focus-visible{background:var(--bg)}
+.menu .h{margin-left:auto;color:var(--muted);font-size:.8rem}
+.rv{font-size:2rem;font-weight:700;margin:0 0 14px;line-height:1.2}
+.rv .val{color:var(--brand)}
+.fl{display:block;font-size:.75rem;font-weight:700;text-transform:uppercase;margin:12px 0 4px}
+.vrow{display:flex}.vrow input{flex:1;min-width:0;border-radius:6px 0 0 6px}.vrow select{border-left:0;border-radius:0 6px 6px 0}
+.cc select{width:auto}.cc #ctol{width:100%}.vrow select{flex:none;width:88px}
+#cerr{color:var(--no,#c0392b);min-height:1.2em;font-size:.85rem;margin-top:4px}
+#cinfo{color:var(--muted);font-size:.9rem;margin-top:10px;line-height:1.7}
+#creset{margin-top:12px;font:inherit;padding:7px 14px;border:1px solid var(--brand);background:var(--card);color:var(--brand);border-radius:6px;cursor:pointer}
+@media (max-width:640px){
+ .ccols{grid-template-columns:1fr}
+ .pick{position:static;display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+ .bsel{position:relative;left:auto;top:auto;transform:none}
+ .bbtn{width:auto;padding:7px 10px}.bbtn .lbl{display:inline}
+ .conn{display:none}.menu,.menu.r{left:0;right:auto;transform:none}
+ .ctabs{gap:14px}
+}
+[hidden]{display:none!important}
+</style>
+</head>
+<body class="fit">
+<header>
+  <div class="top wrap">
+    <h1><a class="logo" href="https://alphatronic.lk/"><img alt="Alphatronic" src="data:image/png;base64,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"></a></h1>
+    
+  </div>
+  <nav class="bar"><div class="wrap" role="tablist">
+    <button role="tab" id="t-find" aria-selected="true">Parts finder</button>
+    <button role="tab" id="t-calc" aria-selected="false">Color code calculator</button>
+  </div></nav>
+</header>
+
+<main class="wrap">
+<section id="p-find">
+  <div class="search">
+    <div class="seg" id="seg"><button data-m="res" aria-pressed="true">Resistors</button><button data-m="cap" aria-pressed="false">Capacitors</button></div>
+    <input id="q" type="search" placeholder="Search value" aria-label="Search resistors" autocomplete="off">
+  </div>
+  <div id="msg" aria-live="polite"></div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<section id="p-calc" hidden>
+  <h2 class="ctitle" id="ctitle">4 Band Resistor Colour Code Calculator</h2>
+  <div class="calc cc">
+    <h3>Number of Bands</h3>
+    <div class="ctabs" role="tablist" id="ctabs">
+      <button role="tab" data-n="4" aria-selected="true">4 Band</button>
+      <button role="tab" data-n="5" aria-selected="false">5 Band</button>
+      <button role="tab" data-n="6" aria-selected="false">6 Band</button>
+    </div>
+    <div class="ccols">
+      <div class="diagram" id="cdiag"></div>
+      <div>
+        <h2 class="rv">Resistor value: <span class="val" id="cval">–</span></h2>
+        <label class="fl" for="cin">Resistance value</label>
+        <div class="vrow">
+          <input id="cin" placeholder="Enter Value..." autocomplete="off" inputmode="decimal">
+          <select id="cunit" aria-label="Unit"><option value="">Ω</option><option value="k">kΩ</option><option value="m">MΩ</option><option value="g">GΩ</option></select>
+        </div>
+        <label class="fl" for="ctol">Tolerance</label>
+        <select id="ctol"><option value="gold">±5%</option><option value="brown">±1%</option><option value="red">±2%</option><option value="silver">±10%</option><option value="green">±0.5%</option><option value="blue">±0.25%</option><option value="violet">±0.1%</option><option value="grey">±0.05%</option></select>
+        <div id="cerr" aria-live="polite"></div>
+        <div id="cinfo"></div>
+        <button id="creset">Clear</button>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+/* ===== CATALOGUE (same 35 values as the product page) ===== */
+const LABELS=["3.3","5.6","10","12","15","18","22","33","39","47","56","68","82","100","110","220","330","470","1K","1.5K","2.2K","4.7K","10K","12K","22K","39K","56K","100K","200K","220K","390K","1M","2.2M","3M","10M"];
+const TOL_DEFAULT="gold";   // tolerance band drawn on cards (gold = ±5%) – change if your stock is 1%
+
+/* ===== COLOUR DATA ===== */
+const COL={black:{h:"#111",d:0,m:1},brown:{h:"#7b3f00",d:1,m:10,t:1,tc:100},red:{h:"#d62828",d:2,m:1e2,t:2,tc:50},
+orange:{h:"#f77f00",d:3,m:1e3,tc:15},yellow:{h:"#fcd116",d:4,m:1e4,tc:25},green:{h:"#2a9d3f",d:5,m:1e5,t:.5},
+blue:{h:"#1d4ed8",d:6,m:1e6,t:.25,tc:10},violet:{h:"#7e22ce",d:7,m:1e7,t:.1,tc:5},grey:{h:"#8d8d8d",d:8,m:1e8,t:.05},
+white:{h:"#fafafa",d:9,m:1e9},gold:{h:"#d4a017",m:.1,t:5},silver:{h:"#c0c0c0",m:.01,t:10}};
+const ALIAS={gray:"grey",purple:"violet"};
+const DIG=["black","brown","red","orange","yellow","green","blue","violet","grey","white"];
+const MULT=[...DIG,"gold","silver"], TOL=["brown","red","green","blue","violet","grey","gold","silver"], TC=["brown","red","orange","yellow","blue","violet"];
+const MEXP={silver:-2,gold:-1};DIG.forEach((c,i)=>MEXP[c]=i);
+
+/* ===== HELPERS ===== */
+const $=s=>document.querySelector(s);
+const toOhms=l=>{const m=l.match(/^([\d.]+)([KM]?)$/);return parseFloat(m[1])*({K:1e3,M:1e6}[m[2]]||1)};
+const trim=n=>String(+n.toFixed(3));
+const fmt=o=>o>=1e6?trim(o/1e6)+" MΩ":o>=1e3?trim(o/1e3)+" kΩ":trim(o)+" Ω";
+const ITEMS=LABELS.map(l=>({l,o:toOhms(l)}));
+function bandsFor(o,n,tol=TOL_DEFAULT){
+  const nd=n===4?2:3, e=Math.floor(Math.log10(o))-(nd-1);let d=Math.round(o/10**e),ex=e;
+  if(d>=10**nd){d=Math.round(d/10);ex++}
+  if(ex<-2||ex>9)return null;
+  const ds=String(d).padStart(nd,"0").split("").map(x=>DIG[+x]);
+  return [...ds,MULT[ex>=0?ex:ex===-1?10:11],tol];
+}
+function valueOf(b){if(b.length===3)return(COL[b[0]].d*10+COL[b[1]].d)*COL[b[2]].m;
+  return(COL[b[0]].d*100+COL[b[1]].d*10+COL[b[2]].d)*COL[b[3]].m}
+function parseVal(s){
+  s=s.toLowerCase().replace(/ohms?|[Ωω]/g,"").replace(/[\s,]/g,"");
+  const m=s.match(/^(\d+(?:\.\d+)?)([kmgr])?(\d+)?$/);if(!m||(m[3]&&!m[2]))return null;
+  return parseFloat(m[3]?m[1]+"."+m[3]:m[1])*({k:1e3,m:1e6,g:1e9,r:1}[m[2]||"r"]);
+}
+function parseColors(s){
+  const w=s.toLowerCase().split(/[\s,\-\/]+/).filter(Boolean).map(x=>ALIAS[x]||x);
+  if(w.length<3||w.length>6||!w.every(x=>COL[x]))return null;
+  const nd=w.length>=5?3:2;
+  if(w.slice(0,nd).some(c=>COL[c].d===undefined)||COL[w[nd]].m===undefined)return null;
+  return valueOf(nd===3?w.slice(0,nd+1):w.slice(0,3));
+}
+function svg(b){
+  const main=b.length===4?3:4,sp=[];
+  let x="";b.forEach((c,i)=>{const px=i<main?54+i*18:136+(i-main)*18;
+    x+=`<rect x="${px}" y="11" width="9" height="38" fill="${COL[c].h}" ${c==="white"?'stroke="#bbb" stroke-width=".8"':""}><title>${c}</title></rect>`});
+  return `<svg viewBox="0 0 220 60" role="img" aria-label="Bands: ${b.join(", ")}"><line x1="2" y1="30" x2="218" y2="30" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/>
+  <rect x="38" y="9" width="144" height="42" rx="16" fill="#e5cfa0"/>${x}</svg>`;
+}
+
+/* ===== CAPACITOR DATA (through-hole parts from alphatronic.lk/product-category/passive/capacitors) ===== */
+const fmtC=pf=>pf<1e4?trim(pf)+"pF":trim(pf/1e6)+"µF";
+const CAPS=[];
+[[10,"100"],[100,"101"],[1000,"102"],[2200,"222"],[3300,"333"],[1e4,"103"]].forEach(([pf,c])=>CAPS.push({k:"cer",pf,v:50,code:c}));
+CAPS.push({k:"cer",pf:47000,v:100,code:"2A473J"},{k:"cer",pf:1e5,v:50,code:"104"},{k:"cer",pf:470000,v:100,code:"2A474J"});
+"0.22,50 1,50 2.2,50 3.3,50 4.7,50 10,16 10,25 10,50 22,18 22,25 33,16 33,25 33,50 47,16 47,50 100,16 100,25 100,50 100,100 220,16 220,25 220,50 330,25 330,50 470,16 470,25 470,50 470,100 680,16 680,25 680,50 1000,16 1000,25 1000,50 2200,25 3300,25 3300,50 4700,18 4700,25 4700,50"
+  .split(" ").forEach(x=>{const [u,v]=x.split(",");CAPS.push({k:"el",pf:Math.round(u*1e6),v:+v})});
+CAPS.push({k:"film",pf:3.3e6,v:250});
+CAPS.forEach(c=>{c.l=fmtC(c.pf)+(c.k==="cer"?"":" "+c.v+"V");c.n=(fmtC(c.pf)+(c.v?c.v+"v":"")+(c.code||"")).toLowerCase().replace("µ","u")});
+const T='font-family="system-ui,sans-serif" font-weight="700" text-anchor="middle"';
+function capCard(c){
+  const t=fmtC(c.pf),big=t.length>=6?30:34,lead=x=>`<line x1="${x}" y1="78" x2="${x}" y2="106" stroke="#9aa3ad" stroke-width="6" stroke-linecap="round"/>`;let b;
+  if(c.k==="el")b=lead(56)+lead(110)+`<rect x="4" y="4" width="152" height="76" rx="14" fill="#1f3a68"/><rect x="4" y="4" width="14" height="76" rx="7" fill="#cfd8e6"/><text x="88" y="46" font-size="${big}" fill="#fff" ${T}>${t}</text><text x="88" y="71" font-size="23" fill="#cfe1ff" ${T}>${c.v}V</text>`;
+  else if(c.k==="cer")b=lead(60)+lead(100)+`<ellipse cx="80" cy="42" rx="74" ry="40" fill="#e8a33d"/><text x="80" y="42" font-size="${t.length>6?25:30}" fill="#2b1c08" ${T}>${t}</text><text x="80" y="68" font-size="21" fill="#2b1c08" ${T}>${c.code}</text>`;
+  else b=lead(44)+lead(116)+`<rect x="4" y="4" width="152" height="76" rx="10" fill="#b5322a"/><text x="80" y="46" font-size="34" fill="#fff" ${T}>${t}</text><text x="80" y="71" font-size="23" fill="#ffd9d4" ${T}>${c.v}V</text>`;
+  return `<div class="tile"><svg viewBox="0 0 160 110" role="img" aria-label="${c.l}">${b}</svg></div>`;
+}
+
+/* ===== FIND TAB ===== */
+let mode="res";
+function card(it){
+  const t=fmt(it.o).replace(" ","");
+  return `<div class="tile"><svg viewBox="0 0 160 56" role="img" aria-label="${t}"><line x1="2" y1="28" x2="158" y2="28" stroke="#9aa3ad" stroke-width="4" stroke-linecap="round"/><rect x="20" y="6" width="120" height="44" rx="16" fill="#e5cfa0"/><text x="80" y="29" text-anchor="middle" dominant-baseline="central" font-size="22" font-weight="700" fill="#2b2118" font-family="system-ui,sans-serif">${t}</text></svg></div>`;
+}
+function searchRes(q){
+  if(!q)return{list:ITEMS,msg:""};
+  let v=parseVal(q),fromColor=false;
+  if(v===null){v=parseColors(q);fromColor=v!==null}
+  if(v!==null&&v>0){
+    const ex=ITEMS.filter(i=>Math.abs(i.o-v)/v<1e-9);
+    if(ex.length)return{list:ex,msg:`<b>Exact match:</b> ${fmt(v)}${fromColor?" (from colour bands)":""}`};
+    const lo=ITEMS.filter(i=>i.o<v).pop(),hi=ITEMS.find(i=>i.o>v),list=[lo,hi].filter(Boolean);
+    return{list,msg:`<b>${fmt(v)}</b> is not listed. Closest values we carry: ${list.map(i=>fmt(i.o)).join(" and ")}.`};
+  }
+  const t=q.toLowerCase(),list=ITEMS.filter(i=>i.l.toLowerCase().includes(t)||fmt(i.o).toLowerCase().includes(t));
+  return{list,msg:list.length?`${list.length} match${list.length>1?"es":""}`:`No match for “${q}”. Try 4.7k, 4k7, 4700 or colours like “yellow violet red”.`};
+}
+function searchCap(q){
+  if(!q)return{list:CAPS,msg:""};
+  let s=q.toLowerCase().replace(/[\s,]/g,"").replace(/[µμ]/g,"u"),volt=null;
+  const vm=s.match(/(\d+(?:\.\d+)?)v/);if(vm){volt=parseFloat(vm[1]);s=s.replace(vm[0],"")}
+  if(!s&&volt!==null){const l=CAPS.filter(c=>c.v===volt);return{list:l,msg:l.length?`${l.length} capacitor${l.length>1?"s":""} rated ${volt}V`:`Nothing rated ${volt}V.`}}
+  const eq=(a,b)=>Math.abs(a-b)/Math.max(b,1e-12)<1e-9;
+  const m=s.match(/^(\d+(?:\.\d+)?)([pnu])(\d+)?f?$/),b=s.match(/^(\d+(?:\.\d+)?)f?$/);let T=null;
+  if(m)T=[parseFloat(m[3]?m[1]+"."+m[3]:m[1])*{p:1,n:1e3,u:1e6}[m[2]]];else if(b)T=[b[1]*1e6,+b[1]];
+  if(T){
+    const ex=CAPS.filter(c=>T.some(t=>eq(c.pf,t))||c.code===s.toUpperCase()||c.code===s);
+    if(ex.length){
+      const name=fmtC(ex[0].pf);
+      if(volt!==null){const bv=ex.filter(c=>c.v===volt);
+        if(bv.length)return{list:bv,msg:`<b>Exact match:</b> ${name} ${volt}V`};
+        return{list:ex,msg:`<b>${name}</b> isn't listed at ${volt}V. Available: ${ex.map(c=>c.v+"V").join(", ")}.`}}
+      return{list:ex,msg:`<b>Exact match:</b> ${name}${ex.length>1?` – ${ex.length} versions`:""}`};
+    }
+    const vals=[...new Set(CAPS.map(c=>c.pf))].sort((a,b)=>a-b),t=T[0],lo=vals.filter(x=>x<t).pop(),hi=vals.find(x=>x>t);
+    const list=CAPS.filter(c=>c.pf===lo||c.pf===hi);
+    return{list,msg:`<b>${fmtC(t)}</b> is not listed. Closest values we carry: ${[lo,hi].filter(x=>x!==undefined).map(fmtC).join(" and ")}.`};
+  }
+  const l=CAPS.filter(c=>c.n.includes(s));
+  return{list:l,msg:l.length?`${l.length} match${l.length>1?"es":""}`:`No match for “${q}”. Try 100uF, 4u7, 10n, 25V or a code like 103.`};
+}
+function render(){
+  const q=$("#q").value.trim(),r=mode==="res"?searchRes(q):searchCap(q);
+  $("#msg").innerHTML=r.msg;$("#grid").className="grid "+mode;
+  $("#grid").innerHTML=r.list.map(mode==="res"?card:capCard).join("");
+}
+$("#q").addEventListener("input",render);
+document.querySelectorAll("#seg button").forEach(b=>b.onclick=()=>{mode=b.dataset.m;$("#q").value="";
+  document.querySelectorAll("#seg button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()});
+
+/* ===== CALCULATOR ===== */
+let n=4,open=null;const st={d:[null,null,null],m:null,t:null,tc:null};
+const XS={4:[58,108,250,392],5:[56,92,128,250,392],6:[56,92,128,250,380,418]};
+const BODY="M40 20H96Q104 20 108 30Q112 38 122 38H358Q368 38 372 30Q376 20 384 20H440Q452 20 452 32V98Q452 110 440 110H384Q376 110 372 100Q368 92 358 92H122Q112 92 108 100Q104 110 96 110H40Q28 110 28 98V32Q28 20 40 20Z";
+const spec=()=>{const nd=n===4?2:3,L=[];for(let i=0;i<nd;i++)L.push({k:"d",i,t:["1st digit","2nd digit","3rd digit"][i],o:DIG});
+  L.push({k:"m",t:"Multiplier",o:MULT},{k:"t",t:"Tolerance",o:TOL});if(n===6)L.push({k:"tc",t:"Temp. coeff.",o:TC});return L};
+const get=b=>b.k==="d"?st.d[b.i]:st[b.k], put=(b,c)=>{if(b.k==="d")st.d[b.i]=c;else st[b.k]=c};
+const mf=m=>m>=1e9?"1G":m>=1e6?m/1e6+"M":m>=1e3?m/1e3+"k":String(m);
+const hint=(k,c)=>{const o=COL[c];return k==="d"?String(o.d):k==="m"?"×"+mf(o.m):k==="t"?"±"+o.t+"%":o.tc+" ppm/K"};
+function ohms(){const nd=n===4?2:3,ds=st.d.slice(0,nd);if(!ds.every(Boolean)||!st.m)return null;return ds.reduce((a,c)=>a*10+COL[c].d,0)*COL[st.m].m}
+function drawCalc(){
+  const L=spec(),X=XS[n];let bands="",conn="",pick="";
+  L.forEach((b,i)=>{const c=get(b),r=i>=L.length-2;
+    bands+=`<rect x="${X[i]-11}" y="0" width="22" height="200" clip-path="url(#bc)" fill="${c?COL[c].h:"rgba(255,255,255,.65)"}"/>`;
+    conn+=`<line class="conn" x1="${X[i]}" x2="${X[i]}" y1="110" y2="150" stroke="#d3d9e4" stroke-width="2"/>`;
+    pick+=`<div class="bsel" style="--x:${(X[i]/4.8).toFixed(2)}%"><button class="bbtn" data-i="${i}" aria-haspopup="listbox" aria-expanded="${open===i}" aria-label="${b.t}: ${c||"not set"}"><span class="dot" style="background:${c?COL[c].h:"transparent"}"></span><span class="lbl">${b.t}</span>▾</button>`
+     +(open===i?`<div class="menu ${r?"r":""}" role="listbox">${b.o.map(x=>`<button data-i="${i}" data-c="${x}" role="option"><span class="dot" style="background:${COL[x].h}"></span>${x[0].toUpperCase()+x.slice(1)}<span class="h">${hint(b.k,x)}</span></button>`).join("")}</div>`:"")+`</div>`});
+  $("#cdiag").innerHTML=`<svg viewBox="0 0 480 170" role="img" aria-label="Resistor with ${L.length} colour bands"><defs><clipPath id="bc"><path d="${BODY}"/></clipPath></defs>
+   <rect x="8" y="52" width="20" height="26" fill="#cfcfcf" stroke="#999" stroke-width="2"/><rect x="452" y="52" width="20" height="26" fill="#cfcfcf" stroke="#999" stroke-width="2"/>
+   <path d="${BODY}" fill="#e7dfd3"/>${bands}<path d="${BODY}" fill="none" stroke="#9a9a9a" stroke-width="3"/>${conn}</svg><div class="pick">${pick}</div>`;
+  const o=ohms(),t=st.t?COL[st.t].t:null;
+  $("#cval").textContent=o==null?"–":fmt(o)+(t?` ±${t}%`:"");
+  let info="";
+  if(o!=null){const it=ITEMS.find(i=>o>0&&Math.abs(i.o-o)/o<1e-9);
+    if(t)info+=`Range: ${fmt(o*(1-t/100))} to ${fmt(o*(1+t/100))}<br>`;
+    if(n===6&&st.tc)info+=`Temp. coefficient: ${st.tc&&COL[st.tc].tc} ppm/K<br>`;
+    info+=`Alphatronic 1/4W listing: <strong>${it?fmt(o)+" – listed":"not in the listed range"}</strong>`}
+  $("#cinfo").innerHTML=info;
+}
+function syncInput(o){if(!(o>0))return;const u=o>=1e9?["g",1e9]:o>=1e6?["m",1e6]:o>=1e3?["k",1e3]:["",1];
+  $("#cin").value=trim(o/u[1]);$("#cunit").value=u[0];$("#cerr").textContent="";if(st.t&&TOL.includes(st.t))$("#ctol").value=st.t}
+function fromInput(){
+  const raw=$("#cin").value.trim();$("#cerr").textContent="";if(!raw){return}
+  const v=parseVal(/[a-z]/i.test(raw)?raw:raw+$("#cunit").value);
+  if(v===null||!(v>0)){$("#cerr").textContent="Enter a value such as 4.7, 4k7 or 330.";return}
+  const b=bandsFor(v,n,$("#ctol").value);if(!b){$("#cerr").textContent="That value is outside the range colour bands can show.";return}
+  const nd=b.length-2,num=b.slice(0,nd).reduce((a,c)=>a*10+COL[c].d,0)*COL[b[nd]].m;
+  if(Math.abs(num-v)/v>1e-9){$("#cerr").textContent=`${fmt(v)} can't be shown exactly with ${n} bands${n===4?" – try 5 or 6 bands":""}.`;return}
+  for(let i=0;i<nd;i++)st.d[i]=b[i];st.m=b[nd];st.t=b[nd+1];drawCalc();
+}
+$("#cdiag").addEventListener("click",e=>{const x=e.target.closest("button");if(!x)return;const i=+x.dataset.i,L=spec();
+  if(x.dataset.c){put(L[i],x.dataset.c);open=null;drawCalc();const o=ohms();if(o!=null)syncInput(o)}
+  else{open=open===i?null:i;drawCalc();if(open!==null){const f=$("#cdiag .menu button");f&&f.focus()}}});
+document.addEventListener("click",e=>{if(open!==null&&!e.target.closest(".bsel")){open=null;drawCalc()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&open!==null){open=null;drawCalc()}});
+document.querySelectorAll("#ctabs button").forEach(b=>b.onclick=()=>{n=+b.dataset.n;open=null;
+  document.querySelectorAll("#ctabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  $("#ctitle").textContent=`${n} Band Resistor Colour Code Calculator`;
+  if($("#cin").value.trim())fromInput();drawCalc()});
+$("#cin").addEventListener("input",fromInput);$("#cunit").addEventListener("change",fromInput);$("#ctol").addEventListener("change",()=>{if($("#cin").value.trim())fromInput();else if(st.t){st.t=$("#ctol").value;drawCalc()}});
+$("#creset").onclick=()=>{st.d=[null,null,null];st.m=st.t=st.tc=null;$("#cin").value="";$("#cerr").textContent="";open=null;drawCalc()};
+
+/* ===== TABS ===== */
+[["find","calc"],["calc","find"]].forEach(([a,o])=>$("#t-"+a).onclick=()=>{
+  $("#p-"+a).hidden=false;$("#p-"+o).hidden=true;
+  $("#t-"+a).setAttribute("aria-selected",true);$("#t-"+o).setAttribute("aria-selected",false);document.body.classList.toggle("fit",a==="find");if(a==="calc")drawCalc();else render()});
+render();drawCalc();
+</script>
+</body>
+</html>
